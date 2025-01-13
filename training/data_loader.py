@@ -17,6 +17,12 @@ class DataLoader:
             }
         self.headers = headers
 
+    def preprocess_df(self, df):
+        """
+        Preprocesses the given dataframe by adding a new column 'valid_links'.        
+        """
+        df["valid_links"] = ~df.duplicated(subset = 'datasheet_link', keep = 'first')
+
     def load_data_from_url(self, url):
         """
         Load data from a URL and return the extracted text and number of pages.
@@ -24,7 +30,8 @@ class DataLoader:
         try:
             response = requests.get(url, stream=True, headers=self.headers, allow_redirects=True, timeout=5)
             reader = PdfReader(io.BytesIO(response.content))
-            text = {str(idx): page.extract_text() for idx, page in enumerate(reader.pages[:4])}
+            # text = {str(idx): page.extract_text() for idx, page in enumerate(reader.pages[:4])}
+            text = reader.pages[0].extract_text()
             num_pages = len(reader.pages)
             return text, num_pages
         except Exception as e:
@@ -35,6 +42,7 @@ class DataLoader:
         """
         Create a dataset JSON from a DataFrame and save it to a file.
         """
+        self.preprocess_df(df)
         err_count = 0
         dataset = defaultdict(dict)
 
@@ -43,7 +51,7 @@ class DataLoader:
             text, num_pages = self.load_data_from_url(url)
             if text:
                 dataset[url] = {
-                    'text': text,
+                    'text': {'0': text},
                     'num_pages': num_pages,
                     'label': label
                 }
@@ -55,13 +63,13 @@ class DataLoader:
                 print(f'-----------{index}--------------')
 
             if index % 50 == 0:
-                self.save_dataset(dataset, save_path, index, err_count)
-
-        self.save_dataset(dataset, save_path, len(df), err_count)
+                self.save_dataset(dataset, save_path)
+                
+        self.save_dataset(dataset, save_path)
         print(f"Finished {index}. Error count: {err_count}")
         return dataset
 
-    def save_dataset(dataset, save_path, index, err_count):
+    def save_dataset(self, dataset, save_path):
         """
         Save the dataset to a JSON file.
         """
@@ -70,7 +78,7 @@ class DataLoader:
 
 # Example usage
 if __name__ == "__main__":
-    df = pd.read_csv("dataset.xlsx", sheet_name = None)  
+    df = pd.read_excel("dataset.xlsx", sheet_name = None)  
     data_loader = DataLoader()
     data_loader.create_dataset_json(df['train_data'], save_path = 'train_json.json')
     data_loader.create_dataset_json(df['test_data'], save_path = 'test_json.json')

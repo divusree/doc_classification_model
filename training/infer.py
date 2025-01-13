@@ -1,16 +1,9 @@
-import os
-import joblib
-import json
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import argparse
 import joblib
+import os
+import json
 class ModelInference:
     def __init__(self, data_json, model_path = "trained_model.pkl"):
         """
@@ -36,23 +29,21 @@ class ModelInference:
         Print misclassified samples.
         """
         print("The following are misclassified examples ----")
-        for idx, (ridx, p) in enumerate(y_test.items()):
+        for idx, p in enumerate(y_test):
             if p != preds[idx]:
-                print("true", p, "preds", preds[idx], self.urls_list[ridx])
+                print("true", p, "preds", preds[idx], self.urls_list[idx])
 
     def visualiser(self, y_test, preds):
         """
-        Visualize the confusion matrix and PCA plot.
+        Visualize the confusion matrix.
         """
-        # Create metrics directory if it doesn't exist
         if not os.path.exists('metrics'):
             os.makedirs('metrics')
 
-        # Display and save confusion matrix
         cm = confusion_matrix(y_test, preds, labels=self.labels)
         disp = ConfusionMatrixDisplay(cm, display_labels=self.labels)
         disp.plot()
-        plt.savefig('metrics/confusion_matrix.png')
+        plt.savefig('metrics/confusion_matrix_test.png')
 
     def predict_all(self, visualise=True):
         text_transformed = self.vectorizer.transform(self.corpus)
@@ -73,15 +64,14 @@ def main():
 
     try:
         with open(args.train_json, 'r') as f:
-            train_json = json.load(f)
+            test_json = json.load(f)
     except Exception as e:
         print(f"Error loading JSON file: {e}")
         return
 
     labels = ['lighting', 'fuses', 'others', 'cable']
 
-    trainer = ModelInference(labels, train_json)
-    trainer.train_and_evaluate(visualise=True)
-    trainer.save_model('inference_module/trained_model.pkl')
+    trainer = ModelInference(labels, test_json)
+    trainer.predict_all(visualise=True)
 if __name__ == "__main__":
     main()

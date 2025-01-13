@@ -72,17 +72,14 @@ class ModelTrainer:
         """
         Visualize the confusion matrix and PCA plot.
         """
-        # Create metrics directory if it doesn't exist
         if not os.path.exists('metrics'):
             os.makedirs('metrics')
 
-        # Display and save confusion matrix
         cm = confusion_matrix(y_test, preds, labels=self.labels)
         disp = ConfusionMatrixDisplay(cm, display_labels=self.labels)
         disp.plot()
-        plt.savefig('metrics/confusion_matrix.png')
+        plt.savefig('metrics/confusion_matrix_train.png')
 
-        # Perform PCA and plot the results
         vectorizer = TfidfVectorizer()
         train_transform = vectorizer.fit_transform(self.train_corpus)
         reduced_data = PCA(n_components=2).fit_transform(train_transform)
@@ -95,7 +92,7 @@ class ModelTrainer:
             color = labels_color_map[self.encoding[self.train_labels[index]]]
             ax.scatter(pca_comp_1, pca_comp_2, c=color)
 
-        plt.savefig('metrics/pca_plot.png')
+        plt.savefig('metrics/pca_plot_train.png')
         plt.show()
 
     def train_and_evaluate(self, visualise=True):
@@ -109,11 +106,13 @@ class ModelTrainer:
         if visualise:
             self.visualiser(y_test, preds)
 
-    def save_model(self):
+    def save_model(self, save_path= 'trained_model.pkl'):
         """
         Save the trained model.
         """
-        joblib.dump(self.clf, 'trained_model.pkl')
+        if not os.path.exists('models'):
+            os.makedirs('models')        
+        joblib.dump(self.clf, os.path.join('models', save_path))
 
 def main():
     parser = argparse.ArgumentParser(description='Train a text classification model.')
