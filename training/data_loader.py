@@ -23,13 +23,10 @@ class DataLoader:
         """
         try:
             response = requests.get(url, stream=True, headers=self.headers, allow_redirects=True, timeout=5)
-            response.raise_for_status()
             reader = PdfReader(io.BytesIO(response.content))
             text = {str(idx): page.extract_text() for idx, page in enumerate(reader.pages[:4])}
             num_pages = len(reader.pages)
             return text, num_pages
-        except requests.RequestException as e:
-            print(f"Request exception for {url}: {e}")
         except Exception as e:
             print(f"Exception raised for {url}: {e}")
         return None, 0
@@ -61,6 +58,7 @@ class DataLoader:
                 self.save_dataset(dataset, save_path, index, err_count)
 
         self.save_dataset(dataset, save_path, len(df), err_count)
+        print(f"Finished {index}. Error count: {err_count}")
         return dataset
 
     def save_dataset(dataset, save_path, index, err_count):
@@ -69,10 +67,10 @@ class DataLoader:
         """
         with open(save_path, 'w') as f:
             json.dump(dataset, f)
-        print(f"Finished {index}. Error count: {err_count}")
 
 # Example usage
 if __name__ == "__main__":
     df = pd.read_csv("dataset.xlsx", sheet_name = None)  
     data_loader = DataLoader()
-    data_loader.create_dataset_json(df)
+    data_loader.create_dataset_json(df['train_data'], save_path = 'train_json.json')
+    data_loader.create_dataset_json(df['test_data'], save_path = 'test_json.json')
