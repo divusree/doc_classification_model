@@ -15,7 +15,7 @@ git clone https://github.com/divusree/doc_classification_model.git
 cd doc_classification_model
 pip install -r requirements.txt
 ```
-### Project structure is as follows
+### Project Structure
 
 ```bash
 |-- .gitignore
