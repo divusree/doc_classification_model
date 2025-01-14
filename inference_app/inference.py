@@ -57,7 +57,7 @@ class Inference:
             text_transformed = self.vectorizer.transform([text])
             prediction = self.network.predict(text_transformed)
             confidence = float(self.network.predict_proba(text_transformed).max())
-            return prediction[0], confidence  
+            return prediction[0], confidence
         else:
             return "", 0
 
@@ -66,13 +66,13 @@ def main():
     parser = argparse.ArgumentParser(
         description="Inference Run for Document Classification model."
     )
-    parser.add_argument('--model_path', type=str, help='Path to saved model')
+    parser.add_argument("--model_path", type=str, help="Path to saved model")
     parser.add_argument("--url", type=str, help="url")
     args = parser.parse_args()
 
     inference = Inference(model_path=args.model_path)
     prediction, confidence = inference.predict(args.url)
-    print({'predicted_label': prediction, 'confidence': confidence})
+    print({"predicted_label": prediction, "confidence": confidence})
 
 
 if __name__ == "__main__":
