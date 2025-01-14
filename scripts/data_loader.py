@@ -4,7 +4,7 @@ import json
 from collections import defaultdict
 from pypdf import PdfReader
 import pandas as pd
-
+import argparse
 class DataLoader:
     def __init__(self, headers=None):
         if headers is None:
@@ -17,19 +17,23 @@ class DataLoader:
             }
         self.headers = headers
 
+    def preprocess_df(self, df):
+        """
+        Preprocesses the given dataframe by adding a new column 'valid_links'.        
+        """
+        df["valid_links"] = ~df.duplicated(subset = 'datasheet_link', keep = 'first')
+
     def load_data_from_url(self, url):
         """
         Load data from a URL and return the extracted text and number of pages.
         """
         try:
             response = requests.get(url, stream=True, headers=self.headers, allow_redirects=True, timeout=5)
-            response.raise_for_status()
             reader = PdfReader(io.BytesIO(response.content))
-            text = {str(idx): page.extract_text() for idx, page in enumerate(reader.pages[:4])}
+            # text = {str(idx): page.extract_text() for idx, page in enumerate(reader.pages[:4])}
+            text = reader.pages[0].extract_text()
             num_pages = len(reader.pages)
             return text, num_pages
-        except requests.RequestException as e:
-            print(f"Request exception for {url}: {e}")
         except Exception as e:
             print(f"Exception raised for {url}: {e}")
         return None, 0
@@ -38,6 +42,7 @@ class DataLoader:
         """
         Create a dataset JSON from a DataFrame and save it to a file.
         """
+        self.preprocess_df(df)
         err_count = 0
         dataset = defaultdict(dict)
 
@@ -46,7 +51,7 @@ class DataLoader:
             text, num_pages = self.load_data_from_url(url)
             if text:
                 dataset[url] = {
-                    'text': text,
+                    'text': {'0': text},
                     'num_pages': num_pages,
                     'label': label
                 }
@@ -58,21 +63,30 @@ class DataLoader:
                 print(f'-----------{index}--------------')
 
             if index % 50 == 0:
-                self.save_dataset(dataset, save_path, index, err_count)
-
-        self.save_dataset(dataset, save_path, len(df), err_count)
+                self.save_dataset(dataset, save_path)
+                
+        self.save_dataset(dataset, save_path)
+        print(f"Finished {index}. Error count: {err_count}")
         return dataset
 
-    def save_dataset(dataset, save_path, index, err_count):
+    def save_dataset(self, dataset, save_path):
         """
         Save the dataset to a JSON file.
         """
         with open(save_path, 'w') as f:
             json.dump(dataset, f)
-        print(f"Finished {index}. Error count: {err_count}")
 
-# Example usage
-if __name__ == "__main__":
-    df = pd.read_csv("dataset.xlsx", sheet_name = None)  
+def main():
+    parser = argparse.ArgumentParser(description='Create dataset JSON from Excel file.')
+    parser.add_argument('--dataset_path', type=str, required=True, help='Path to the dataset Excel file')
+    parser.add_argument('--train_save_path', type=str, default='datasets/train_json.json', help='Path to save the training JSON file')
+    parser.add_argument('--test_save_path', type=str, default='datasets/test_json.json', help='Path to save the testing JSON file')
+    args = parser.parse_args()
+
+    df = pd.read_excel(args.dataset_path, sheet_name=None)
     data_loader = DataLoader()
-    data_loader.create_dataset_json(df)
+    data_loader.create_dataset_json(df['train_data'], save_path=args.train_save_path)
+    data_loader.create_dataset_json(df['test_data'], save_path=args.test_save_path)
+
+if __name__ == "__main__":
+    main()

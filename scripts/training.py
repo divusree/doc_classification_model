@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import argparse
 
 class ModelTrainer:
-    def __init__(self, labels, data_json):
+    def __init__(self, labels, data_json = 'datasets/train_json.json'):
         """
         Initialize the ModelTrainer with labels and data.
         """
@@ -57,32 +57,30 @@ class ModelTrainer:
         """
         score = clf.score(X_test, y_test)
         print(f"Model accuracy: {score}")
-        return clf.predict(X_test)
+        return clf.predict(X_test), clf.predict_proba(X_test)
 
-    def print_misclassified_samples(self, y_test, preds):
+    def print_misclassified_samples(self, y_test, preds, confidence_list):
         """
         Print misclassified samples.
         """
         print("The following are misclassified examples ----")
         for idx, (ridx, p) in enumerate(y_test.items()):
             if p != preds[idx]:
-                print("true", p, "preds", preds[idx], self.urls_list[ridx])
+                print("true values", p, "predictions", preds[idx], "confidence", float(confidence_list[idx].max()), self.urls_list[ridx])
 
     def visualiser(self, y_test, preds):
         """
         Visualize the confusion matrix and PCA plot.
         """
-        # Create metrics directory if it doesn't exist
         if not os.path.exists('metrics'):
             os.makedirs('metrics')
 
-        # Display and save confusion matrix
         cm = confusion_matrix(y_test, preds, labels=self.labels)
         disp = ConfusionMatrixDisplay(cm, display_labels=self.labels)
         disp.plot()
-        plt.savefig('metrics/confusion_matrix.png')
+        disp.ax_.set_title("Confusion Matrix for training set")
+        plt.savefig('metrics/confusion_matrix_train.png')
 
-        # Perform PCA and plot the results
         vectorizer = TfidfVectorizer()
         train_transform = vectorizer.fit_transform(self.train_corpus)
         reduced_data = PCA(n_components=2).fit_transform(train_transform)
@@ -94,8 +92,8 @@ class ModelTrainer:
             pca_comp_1, pca_comp_2 = instance
             color = labels_color_map[self.encoding[self.train_labels[index]]]
             ax.scatter(pca_comp_1, pca_comp_2, c=color)
-
-        plt.savefig('metrics/pca_plot.png')
+        plt.title("PCA plot for training set")
+        plt.savefig('metrics/pca_plot_train.png')
         plt.show()
 
     def train_and_evaluate(self, visualise=True):
@@ -104,16 +102,18 @@ class ModelTrainer:
         """
         X_train, X_test, y_train, y_test = self.split_data()
         self.clf = self.create_and_train_model(X_train, y_train)
-        preds = self.evaluate_model(self.clf, X_test, y_test)
-        self.print_misclassified_samples(y_test, preds)
+        preds, confidences = self.evaluate_model(self.clf, X_test, y_test)
+        self.print_misclassified_samples(y_test, preds, confidences)
         if visualise:
             self.visualiser(y_test, preds)
 
-    def save_model(self):
+    def save_model(self, save_path= 'trained_model.pkl'):
         """
         Save the trained model.
         """
-        joblib.dump(self.clf, 'trained_model.pkl')
+        if not os.path.exists('models'):
+            os.makedirs('models')        
+        joblib.dump(self.clf, os.path.join('models', save_path))
 
 def main():
     parser = argparse.ArgumentParser(description='Train a text classification model.')
@@ -132,5 +132,6 @@ def main():
     trainer = ModelTrainer(labels, train_json)
     trainer.train_and_evaluate(visualise=True)
     trainer.save_model()
+    
 if __name__ == "__main__":
     main()

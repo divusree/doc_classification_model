@@ -52,25 +52,27 @@ class Inference:
             return "", 0
 
     def predict(self, url):
-        text, _ = self.load_data_from_url(url)
-        if text:
+        text, num_pages = self.load_data_from_url(url)
+        if num_pages > 0:
             text_transformed = self.vectorizer.transform([text])
             prediction = self.network.predict(text_transformed)
-            return prediction[0]
+            confidence = float(self.network.predict_proba(text_transformed).max())
+            return prediction[0], confidence  
         else:
-            return ""
+            return "", 0
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Inference Run for Document Classification model."
     )
+    parser.add_argument('--model_path', type=str, help='Path to saved model')
     parser.add_argument("--url", type=str, help="url")
     args = parser.parse_args()
 
-    inference = Inference(model_path="trained_model.pkl")
-    prediction = inference.predict(args.url)
-    print(prediction)
+    inference = Inference(model_path=args.model_path)
+    prediction, confidence = inference.predict(args.url)
+    print({'predicted_label': prediction, 'confidence': confidence})
 
 
 if __name__ == "__main__":
