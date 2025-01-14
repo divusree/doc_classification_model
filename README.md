@@ -11,8 +11,8 @@ This project implements a Logistic Regression model for classifying PDFs of prod
 Clone the repository and install the required dependencies:
 
 ```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/divusree/doc_classification_model.git
+cd doc_classification_model
 pip install -r requirements.txt
 ```
 ### Project structure is as follows
