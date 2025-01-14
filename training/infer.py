@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report
 import matplotlib.pyplot as plt
 import argparse
 import joblib
@@ -10,10 +10,11 @@ class ModelInference:
         Initialize the ModelTrainer with text, associated labels and the trained model.
         """
         self.data_json = data_json
-        self.urls_list, self.labels, self.corpus = self.prepare_data(data_json)
+        self.urls_list, self.targets, self.corpus = self.prepare_data(data_json)
         self.clf = joblib.load(model_path)
         self.vectorizer = self.clf.named_steps["vectoriser"]
         self.network = self.clf.named_steps["logisticreg"]
+        self.labels = ['lighting', 'fuses', 'others', 'cable']
 
     def prepare_data(self, data_json):
         """
@@ -32,7 +33,7 @@ class ModelInference:
         for idx, p in enumerate(y_test):
             if p != preds[idx]:
                 print("true values", p, "predictions", preds[idx], "confidence", float(confidence_list[idx].max()), self.urls_list[idx])
-
+        print (classification_report(y_test, preds) ) 
     def visualiser(self, y_test, preds):
         """
         Visualize the confusion matrix.
@@ -48,14 +49,20 @@ class ModelInference:
         plt.show()
 
     def predict_all(self, visualise=True):
+        """
+        Run predictions for all datapoints.
+        """
         text_transformed = self.vectorizer.transform(self.corpus)
         prediction = self.network.predict(text_transformed)
         confidence_list = self.network.predict_proba(text_transformed)
-        self.print_misclassified_samples(self.labels, prediction, confidence_list)
+        self.print_misclassified_samples(self.targets, prediction, confidence_list)
         if visualise:
-            self.visualiser(self.labels, prediction)
+            self.visualiser(self.targets, prediction)
 
     def predict(self, text):
+        """
+        Run prediction for just 1 datapoint.
+        """
         text_transformed = self.vectorizer.transform([text])
         prediction = self.network.predict(text_transformed)
         confidence = float(self.network.predict_proba(text_transformed).max())
