@@ -71,7 +71,7 @@ The Flask app is ready to use in a dev server. This app is not built with gunico
 
 #### Running the Inference App
 
-To run the inference app, use curl or requests to hit the below API:
+A version of the app is hosted with AWS lightsail. To hit the API, use requests as shown below:
 
 ```python
 import requests 
@@ -81,4 +81,4 @@ response = requests.get(BASE, json = {"url":url})
 print(response.json())
 ```
 
-NB: the web server might not be available at all times.
+NB: the web server might not be available at all times, this is also not production ready.
