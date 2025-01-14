@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import argparse
 
 class ModelTrainer:
-    def __init__(self, labels, data_json):
+    def __init__(self, labels, data_json = 'datasets/train_json.json'):
         """
         Initialize the ModelTrainer with labels and data.
         """
@@ -132,5 +132,6 @@ def main():
     trainer = ModelTrainer(labels, train_json)
     trainer.train_and_evaluate(visualise=True)
     trainer.save_model()
+    
 if __name__ == "__main__":
     main()

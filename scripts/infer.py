@@ -33,6 +33,7 @@ class ModelInference:
         for idx, p in enumerate(y_test):
             if p != preds[idx]:
                 print("true values", p, "predictions", preds[idx], "confidence", float(confidence_list[idx].max()), self.urls_list[idx])
+        print("classification_report")
         print (classification_report(y_test, preds) ) 
     def visualiser(self, y_test, preds):
         """

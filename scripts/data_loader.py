@@ -4,7 +4,7 @@ import json
 from collections import defaultdict
 from pypdf import PdfReader
 import pandas as pd
-
+import argparse
 class DataLoader:
     def __init__(self, headers=None):
         if headers is None:
@@ -76,9 +76,17 @@ class DataLoader:
         with open(save_path, 'w') as f:
             json.dump(dataset, f)
 
-# Example usage
-if __name__ == "__main__":
-    df = pd.read_excel("dataset.xlsx", sheet_name = None)  
+def main():
+    parser = argparse.ArgumentParser(description='Create dataset JSON from Excel file.')
+    parser.add_argument('--dataset_path', type=str, required=True, help='Path to the dataset Excel file')
+    parser.add_argument('--train_save_path', type=str, default='datasets/train_json.json', help='Path to save the training JSON file')
+    parser.add_argument('--test_save_path', type=str, default='datasets/test_json.json', help='Path to save the testing JSON file')
+    args = parser.parse_args()
+
+    df = pd.read_excel(args.dataset_path, sheet_name=None)
     data_loader = DataLoader()
-    data_loader.create_dataset_json(df['train_data'], save_path = 'train_json.json')
-    data_loader.create_dataset_json(df['test_data'], save_path = 'test_json.json')
+    data_loader.create_dataset_json(df['train_data'], save_path=args.train_save_path)
+    data_loader.create_dataset_json(df['test_data'], save_path=args.test_save_path)
+
+if __name__ == "__main__":
+    main()
