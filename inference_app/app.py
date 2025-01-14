@@ -12,11 +12,10 @@ def predict():
     url = data.get('url')
     if not url:
         return jsonify({'error': 'URL is required'})
-
-    prediction = inference.predict(url)
-    if prediction:
-        return jsonify({'predicted_label': prediction})
-    else:
+    try:
+        prediction, confidence = inference.predict(url)
+        return jsonify({'predicted_label': prediction, 'confidence': confidence})
+    except:
         return jsonify({'error': 'Failed to extract text from the URL'})
 
 if __name__ == "__main__":

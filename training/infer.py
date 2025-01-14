@@ -24,14 +24,14 @@ class ModelInference:
         corpus = [data_json[url]['text'].get('0') for url in urls_list if data_json[url]['text'].get('0') is not None]
         return urls_list, labels, corpus
 
-    def print_misclassified_samples(self, y_test, preds):
+    def print_misclassified_samples(self, y_test, preds, confidence_list):
         """
         Print misclassified samples.
         """
         print("The following are misclassified examples ----")
         for idx, p in enumerate(y_test):
             if p != preds[idx]:
-                print("true", p, "preds", preds[idx], self.urls_list[idx])
+                print("true values", p, "predictions", preds[idx], "confidence", float(confidence_list[idx].max()), self.urls_list[idx])
 
     def visualiser(self, y_test, preds):
         """
@@ -43,35 +43,38 @@ class ModelInference:
         cm = confusion_matrix(y_test, preds, labels=self.labels)
         disp = ConfusionMatrixDisplay(cm, display_labels=self.labels)
         disp.plot()
+        disp.ax_.set_title("Confusion Matrix for test set")
         plt.savefig('metrics/confusion_matrix_test.png')
+        plt.show()
 
     def predict_all(self, visualise=True):
         text_transformed = self.vectorizer.transform(self.corpus)
         prediction = self.network.predict(text_transformed)
-        self.print_misclassified_samples(self.labels, prediction)
+        confidence_list = self.network.predict_proba(text_transformed)
+        self.print_misclassified_samples(self.labels, prediction, confidence_list)
         if visualise:
             self.visualiser(self.labels, prediction)
 
     def predict(self, text):
         text_transformed = self.vectorizer.transform([text])
         prediction = self.network.predict(text_transformed)
-        return prediction      
+        confidence = float(self.network.predict_proba(text_transformed).max())
+        return prediction, confidence    
       
 def main():
     parser = argparse.ArgumentParser(description='Run inference on a document classification model.')
     parser.add_argument('--test_json', type=str, help='Path to the test JSON file')
+    parser.add_argument('--model_path', type=str, help='Path to saved model')
     args = parser.parse_args()
 
     try:
-        with open(args.train_json, 'r') as f:
+        with open(args.test_json, 'r') as f:
             test_json = json.load(f)
     except Exception as e:
         print(f"Error loading JSON file: {e}")
         return
 
-    labels = ['lighting', 'fuses', 'others', 'cable']
-
-    trainer = ModelInference(labels, test_json)
+    trainer = ModelInference(test_json, model_path = args.model_path)
     trainer.predict_all(visualise=True)
 if __name__ == "__main__":
     main()

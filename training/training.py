@@ -57,16 +57,16 @@ class ModelTrainer:
         """
         score = clf.score(X_test, y_test)
         print(f"Model accuracy: {score}")
-        return clf.predict(X_test)
+        return clf.predict(X_test), clf.predict_proba(X_test)
 
-    def print_misclassified_samples(self, y_test, preds):
+    def print_misclassified_samples(self, y_test, preds, confidence_list):
         """
         Print misclassified samples.
         """
         print("The following are misclassified examples ----")
         for idx, (ridx, p) in enumerate(y_test.items()):
             if p != preds[idx]:
-                print("true", p, "preds", preds[idx], self.urls_list[ridx])
+                print("true values", p, "predictions", preds[idx], "confidence", float(confidence_list[idx].max()), self.urls_list[ridx])
 
     def visualiser(self, y_test, preds):
         """
@@ -78,6 +78,7 @@ class ModelTrainer:
         cm = confusion_matrix(y_test, preds, labels=self.labels)
         disp = ConfusionMatrixDisplay(cm, display_labels=self.labels)
         disp.plot()
+        disp.ax_.set_title("Confusion Matrix for training set")
         plt.savefig('metrics/confusion_matrix_train.png')
 
         vectorizer = TfidfVectorizer()
@@ -91,7 +92,7 @@ class ModelTrainer:
             pca_comp_1, pca_comp_2 = instance
             color = labels_color_map[self.encoding[self.train_labels[index]]]
             ax.scatter(pca_comp_1, pca_comp_2, c=color)
-
+        plt.title("PCA plot for training set")
         plt.savefig('metrics/pca_plot_train.png')
         plt.show()
 
@@ -101,8 +102,8 @@ class ModelTrainer:
         """
         X_train, X_test, y_train, y_test = self.split_data()
         self.clf = self.create_and_train_model(X_train, y_train)
-        preds = self.evaluate_model(self.clf, X_test, y_test)
-        self.print_misclassified_samples(y_test, preds)
+        preds, confidences = self.evaluate_model(self.clf, X_test, y_test)
+        self.print_misclassified_samples(y_test, preds, confidences)
         if visualise:
             self.visualiser(y_test, preds)
 
