@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 To train the model, run the following command:
 
-python scripts/training.py --train_json scripts/datasets/train_json.json
+`python scripts/training.py --train_json scripts/datasets/train_json.json`
 
 #### Performing Inference
 
