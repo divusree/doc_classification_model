@@ -56,11 +56,15 @@ To train the model, run the following command:
 
 `python scripts/training.py --train_json scripts/datasets/train_json.json`
 
-#### Performing Inference
+#### Running Inference
 
-To perform inference using the trained model, run the following command:
+To run inference with a URL using the trained model, run the following command:
 
-`python scripts/infer.py --train_json scripts/datasets/train_json.json`
+`python inference_app/inference.py --url "https://catalog.belden.com/techdata/EN/1855A_techdata.pdf" --model_path scripts/models/trained_model.pkl`
+
+To run inference on the entire test set, assuming the data loader has been previously run:
+
+`python scripts/infer.py --train_json scripts/datasets/test_json.json --model_pathscripts/models/ trained_model.pkl`
 
 #### Building the Inference App
 
