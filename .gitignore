@@ -170,11 +170,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 inference_app/trained_model.pkl
-training/metrics/confusion_matrix_test.png
-training/metrics/confusion_matrix_train.png
-training/metrics/pca_plot_train.png
-training/models/trained_model.pkl
-scripts/metrics/confusion_matrix_test.png
-scripts/metrics/confusion_matrix_train.png
-scripts/metrics/pca_plot_train.png
-scripts/models/trained_model.pkl
+scripts/metrics/
+scripts/models/
+scripts/datasets/
